@@ -9,18 +9,17 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
 def prepare_features(df, target_col='yield_per_hectare'):
     """
-    Splits a fully prepared DataFrame into feature matrix X and target vector y.
-    Encodes any remaining categorical columns using one-hot encoding.
-    Returns X, y.
+    Splits the data into features (X) and the target (y).
+    It also handles one-hot encoding for any categorical columns left in the data.
     """
     df_encoded = df.copy()
 
-    # Encode any remaining object columns
+    # Turn categorical text columns into numbers
     cat_cols = df_encoded.select_dtypes(include='object').columns.tolist()
     if cat_cols:
         df_encoded = pd.get_dummies(df_encoded, columns=cat_cols, drop_first=True)
 
-    # Convert boolean dummies to int for clean sklearn compatibility
+    # Convert the boolean columns to 0/1 integers for better compatibility
     bool_cols = df_encoded.select_dtypes(include='bool').columns
     df_encoded[bool_cols] = df_encoded[bool_cols].astype(int)
 
@@ -32,37 +31,34 @@ def prepare_features(df, target_col='yield_per_hectare'):
 
 def split_data(X, y, test_size=0.2, random_state=42):
     """
-    Splits features and target into train and test sets.
-    Uses an 80/20 split by default with a fixed random seed for reproducibility.
+    Splits the data into training and testing sets.
+    Default is an 80/20 split with a fixed seed so we get the same results every time.
     """
     return train_test_split(X, y, test_size=test_size, random_state=random_state)
 
 
 def train_model(X_train, y_train, model_type='random_forest', random_state=42):
     """
-    Trains a regression model inside a sklearn Pipeline.
-    Supported model_types: 'linear_regression', 'random_forest'.
-    Returns the fitted Pipeline.
+    Trains either a Linear Regression or Random Forest model inside a pipeline.
     """
     if model_type == 'linear_regression':
         regressor = LinearRegression()
     elif model_type == 'random_forest':
         regressor = RandomForestRegressor(n_estimators=100, random_state=random_state)
     else:
-        raise ValueError(f"Unknown model_type '{model_type}'. Use 'linear_regression' or 'random_forest'.")
+        raise ValueError(f"Whoops, {model_type} isn't supported. Use 'linear_regression' or 'random_forest'.")
 
     pipeline = Pipeline([('regressor', regressor)])
     pipeline.fit(X_train, y_train)
 
-    print(f'Model trained: {model_type}')
+    print(f'Done training: {model_type}')
     return pipeline
 
 
 def tune_random_forest(X_train, y_train, random_state=42):
     """
-    Performs hyperparameter tuning on a Random Forest Pipeline using GridSearchCV.
-    Searches over n_estimators and max_depth with 5-fold cross-validation.
-    Returns the best estimator Pipeline.
+    Uses GridSearch to find the best settings for the Random Forest model.
+    It tests different tree counts and depths using 5-fold cross-validation.
     """
     pipeline = Pipeline([
         ('regressor', RandomForestRegressor(random_state=random_state))
@@ -83,17 +79,15 @@ def tune_random_forest(X_train, y_train, random_state=42):
     )
     grid_search.fit(X_train, y_train)
 
-    print(f'Best params: {grid_search.best_params_}')
-    print(f'Best CV R2 : {grid_search.best_score_:.4f}')
+    print(f'Best settings found: {grid_search.best_params_}')
+    print(f'Best R2 score from CV: {grid_search.best_score_:.4f}')
 
     return grid_search.best_estimator_
 
 
 def evaluate_model(model, X_test, y_test, model_name='Model'):
     """
-    Evaluates a fitted model on the test set.
-    Returns a dict with MAE, RMSE, and R2 metrics.
-    Prints a formatted summary.
+    Tests the model on the hold-out set and returns MAE, RMSE, and R2 metrics.
     """
     y_pred = model.predict(X_test)
 
@@ -104,16 +98,16 @@ def evaluate_model(model, X_test, y_test, model_name='Model'):
         'R2': round(r2_score(y_test, y_pred), 4)
     }
 
+    # Print a nice summary line
     print(f'{model_name:30s} | MAE={metrics["MAE"]:.4f} | RMSE={metrics["RMSE"]:.4f} | R2={metrics["R2"]:.4f}')
     return metrics
 
 
 def cross_validate_model(model, X, y, cv=5, scoring='r2'):
     """
-    Runs k-fold cross-validation on a model.
-    Returns mean and standard deviation of the chosen scoring metric.
+    Runs cross-validation to see how stable the model is across different data splits.
     """
     scores = cross_val_score(model, X, y, cv=cv, scoring=scoring)
-    print(f'CV {scoring} scores: {scores.round(4)}')
-    print(f'Mean: {scores.mean():.4f} | Std: {scores.std():.4f}')
+    print(f'CV scores: {scores.round(4)}')
+    print(f'Average: {scores.mean():.4f} | Std Dev: {scores.std():.4f}')
     return scores
