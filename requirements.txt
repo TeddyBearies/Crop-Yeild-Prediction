@@ -7,3 +7,7 @@ jupyter
 requests
 beautifulsoup4
 joblib
+fastapi
+uvicorn
+jinja2
+python-multipart

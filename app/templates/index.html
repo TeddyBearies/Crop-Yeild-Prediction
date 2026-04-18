@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kyield | AI Crop Forecaster</title>
+    <!-- Use Inter font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --surface: rgba(30, 41, 59, 0.7);
+            --surface-border: rgba(255, 255, 255, 0.1);
+            --primary: #10b981;
+            --primary-hover: #059669;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(56, 189, 248, 0.1) 0px, transparent 50%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #34d399, #38bdf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .dashboard {
+            width: 100%;
+            max-width: 1000px;
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 2rem;
+        }
+
+        @media (max-width: 800px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .glass-panel {
+            background: var(--surface);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--surface-border);
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: slideUp 0.6s ease-out forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .glass-panel:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        input, select {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--surface-border);
+            color: var(--text-main);
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+        }
+
+        select option {
+            background: var(--bg-color);
+        }
+
+        .btn-submit {
+            grid-column: 1 / -1;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 1rem;
+        }
+
+        .btn-submit:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+        }
+        
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Result Panel Styles */
+        .result-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+        }
+
+        .status-idle {
+            color: var(--text-muted);
+        }
+
+        .loader {
+            display: none;
+            width: 48px;
+            height: 48px;
+            border: 5px solid rgba(255, 255, 255, 0.1);
+            border-bottom-color: var(--primary);
+            border-radius: 50%;
+            animation: rotation 1s linear infinite;
+        }
+
+        .forecast-result {
+            display: none;
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            width: 100%;
+        }
+
+        .yield-value {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 1rem 0 0.5rem;
+            text-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .yield-unit {
+            font-size: 1rem;
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+        }
+        
+        .summary-list {
+            list-style: none;
+            text-align: left;
+            margin-top: 1.5rem;
+            border-top: 1px solid var(--surface-border);
+            padding-top: 1.5rem;
+            width: 100%;
+        }
+        
+        .summary-list li {
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .summary-list span.val {
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        /* Animations */
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes rotation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.9); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Kyield</h1>
+        <p>Pre-Harvest Crop Yield Forecasting System</p>
+    </div>
+
+    <div class="dashboard">
+        <!-- Input Form -->
+        <form class="glass-panel" id="predictionForm">
+            <h2>Simulation Parameters</h2>
+            
+            <div class="form-grid">
+                <!-- Categoricals -->
+                <div class="input-group">
+                    <label for="crop">Target Crop</label>
+                    <select id="crop" name="crop" required>
+                        {% for c in crops %}
+                        <option value="{{ c }}">{{ c }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label for="season">Season</label>
+                    <select id="season" name="season" required>
+                        {% for s in seasons %}
+                        <!-- We trim the visual label but keep the exact value the model expects -->
+                        <option value="{{ s }}">{{ s.strip() }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="state">State</label>
+                    <select id="state" name="state" required>
+                        {% for st in states %}
+                        <option value="{{ st }}">{{ st }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="zone">Geographic Zone</label>
+                    <select id="zone" name="zone" required>
+                        {% for z in zones %}
+                        <option value="{{ z }}">{{ z }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Numerics -->
+                <div class="input-group">
+                    <label for="year">Crop Year</label>
+                    <input type="number" id="year" name="year" value="2018" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="area">Planted Area (Hectares)</label>
+                    <input type="number" step="any" id="area" name="area" value="100000" placeholder="e.g. 100000" required>
+                </div>
+                
+                <!-- Reminder: Production is a leakage variable here as stated in the report, but required by the current model -->
+                <div class="input-group">
+                    <label for="production">Expected Production (Tonnes)</label>
+                    <input type="number" step="any" id="production" name="production" value="250000" placeholder="e.g. 250000" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="rainfall">Annual Rainfall (mm)</label>
+                    <input type="number" step="any" id="rainfall" name="rainfall" value="1200.5" placeholder="e.g. 1200" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="fertilizer">Fertilizer Used (Tonnes)</label>
+                    <input type="number" step="any" id="fertilizer" name="fertilizer" value="5000" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="pesticide">Pesticide Used (Tonnes)</label>
+                    <input type="number" step="any" id="pesticide" name="pesticide" value="250" required>
+                </div>
+
+                <button type="submit" class="btn-submit" id="submitBtn">Generate Forecast</button>
+            </div>
+        </form>
+
+        <!-- Result Panel -->
+        <div class="glass-panel result-panel">
+            <h2>Forecast Engine</h2>
+            
+            <div id="idleState" class="status-idle">
+                <p>Waiting for simulation inputs...</p>
+                <div style="margin-top:2rem; opacity:0.2;">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                </div>
+            </div>
+
+            <span class="loader" id="loader"></span>
+
+            <div class="forecast-result" id="resultContainer">
+                <div class="yield-value" id="yieldScore">--</div>
+                <div class="yield-unit">Tonnes per Hectare<br>(Yield R² ≈ 0.90)</div>
+                
+                <ul class="summary-list">
+                    <li>Target Crop: <span class="val" id="sumCrop"></span></li>
+                    <li>State: <span class="val" id="sumState"></span></li>
+                    <li>Rainfall: <span class="val" id="sumRain"></span> mm</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('predictionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const btn = document.getElementById('submitBtn');
+            const idle = document.getElementById('idleState');
+            const loader = document.getElementById('loader');
+            const result = document.getElementById('resultContainer');
+            
+            // UI State change
+            btn.disabled = true;
+            btn.innerText = "Processing...";
+            idle.style.display = 'none';
+            result.style.display = 'none';
+            loader.style.display = 'block';
+
+            const formData = new FormData(e.target);
+            
+            try {
+                // Add a tiny artificial delay to let the user see the loader animation (makes it feel like heavy math)
+                await new Promise(r => setTimeout(r, 600));
+
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if(data.status === 'success') {
+                    document.getElementById('yieldScore').innerText = data.forecast;
+                    document.getElementById('sumCrop').innerText = data.input_summary.Crop;
+                    document.getElementById('sumState').innerText = data.input_summary.State;
+                    document.getElementById('sumRain').innerText = data.input_summary.Rainfall;
+                    
+                    loader.style.display = 'none';
+                    result.style.display = 'block';
+                } else {
+                    alert("Error in prediction: " + data.message);
+                    loader.style.display = 'none';
+                    idle.style.display = 'block';
+                }
+            } catch (err) {
+                alert("Network error occurred: " + err);
+                loader.style.display = 'none';
+                idle.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Generate Forecast";
+            }
+        });
+    </script>
+</body>
+</html>
