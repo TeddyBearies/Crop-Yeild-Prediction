@@ -69,3 +69,15 @@ It also has a dedicated "Resilience Engine" that audits how crops behave during 
 - **Git** (Version Control)
 
 *Built as part of the KH5004CMD Data Science Coursework.*
+
+---
+
+## 📚 References & Resources
+
+I relied on these technical guides and community discussions to handle the modeling, scraping, and web development parts of the project:
+
+- **Machine Learning**: [Random Forest Regression in Python](https://www.geeksforgeeks.org/random-forest-regression-in-python/) — helped with the tuning logic for the predictor.
+- **Data Visualization**: [Correlation Heatmaps with Seaborn](https://www.geeksforgeeks.org/how-to-create-a-seaborn-correlation-heatmap-in-python/) — used this as a reference for the Phase 2 heatmaps.
+- **Web Scraping**: [Scraping Wikipedia with BeautifulSoup](https://www.geeksforgeeks.org/implementing-web-scraping-python-beautifulsoup/) — used for the Zone-mapping logic in Phase 3.
+- **Web Deployment**: [Serving Jinja2 Templates with FastAPI](https://stackoverflow.com/questions/64516139/how-to-serve-jinja2-templates-with-fastapi-correctly) — helped iron out the frontend-backend connection.
+- **Methodology**: [CRISP-DM Data Mining Framework](https://www.geeksforgeeks.org/crisp-dm-data-mining-framework/) — the standard I followed for the project phases.
