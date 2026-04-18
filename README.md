@@ -81,3 +81,6 @@ I relied on these technical guides and community discussions to handle the model
 - **Web Scraping**: [Scraping Wikipedia with BeautifulSoup](https://www.geeksforgeeks.org/implementing-web-scraping-python-beautifulsoup/) — used for the Zone-mapping logic in Phase 3.
 - **Web Deployment**: [Serving Jinja2 Templates with FastAPI](https://stackoverflow.com/questions/64516139/how-to-serve-jinja2-templates-with-fastapi-correctly) — helped iron out the frontend-backend connection.
 - **Methodology**: [CRISP-DM Data Mining Framework](https://www.geeksforgeeks.org/crisp-dm-data-mining-framework/) — the standard I followed for the project phases.
+- **Kaggle**: [Indian Agriculture / Crop Yield Dataset](https://www.kaggle.com/datasets/srinivas1/agricuture-crop-prediction) — the primary source for the historical yield and climate data.
+- **Wikipedia**: [States and Union Territories of India](https://en.wikipedia.org/wiki/States_and_union_territories_of_India) — used for mapping states to geographic zones during data augmentation.
+- **Library Documentation**: [Scikit-learn User Guide](https://scikit-learn.org/stable/user_guide.html) — reference for model implementation and cross-validation strategies.
